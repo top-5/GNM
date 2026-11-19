@@ -124,6 +124,14 @@ class GNM(gnm_xnp.GNM, torch.nn.Module):
 
   _shape_error_type = RuntimeError
 
+  @classmethod
+  def from_gnm(cls, gnm: Any) -> 'GNM':
+    """Creates a PyTorch GNM instance from another GNM instance, preserving torch device."""
+    new_gnm = super().from_gnm(gnm)
+    if isinstance(gnm, torch.nn.Module):
+      return new_gnm.to(gnm.template_vertex_positions.device)
+    return new_gnm
+
   def __post_init__(self):
     super().__post_init__()
     torch.nn.Module.__init__(self)
