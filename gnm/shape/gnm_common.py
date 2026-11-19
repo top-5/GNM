@@ -49,6 +49,8 @@ def take[ArrayT: Any](
     xnp = enp.lazy.get_xnp(array)
   if enp.lazy.is_torch_xnp(xnp):
     axis = axis % array.ndim
+    if hasattr(indices, 'device') and indices.device != array.device:
+      indices = indices.to(device=array.device)
     indices_shape = indices.shape
     if len(indices_shape) > 1:
       indices_flat = indices.reshape(-1)
@@ -368,9 +370,12 @@ def joint_transforms_world_from_rotation_matrices[ArrayT: Any](
       joints, 2, (num_joints, 1, 4), dtype=joints.dtype
   )
   # Set the last element to 1.0.
-  bottom_row = bottom_row + xnp.asarray(
-      [0.0, 0.0, 0.0, 1.0], dtype=joints.dtype
+  bottom_one = (
+      xnp.asarray([0.0, 0.0, 0.0, 1.0], dtype=joints.dtype, device=joints.device)
+      if enp.lazy.is_torch_xnp(xnp)
+      else xnp.asarray([0.0, 0.0, 0.0, 1.0], dtype=joints.dtype)
   )
+  bottom_row = bottom_row + bottom_one
 
   local_transforms = xnp.concatenate(
       [local_transforms_3x4, bottom_row], axis=-2

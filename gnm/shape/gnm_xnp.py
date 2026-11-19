@@ -432,6 +432,8 @@ class GNM(gnm_base.GNMBase):
         translation=translation,
     )
     weights = enp.compat.astype(weights, vertices.dtype)
+    if enp.lazy.is_torch_xnp(self.xnp) and weights.device != vertices.device:
+      weights = weights.to(device=vertices.device)
 
     face_vertices = gnm_common.take(vertices, indices, axis=-2, xnp=self.xnp)
     landmarks = self.xnp.sum(face_vertices * weights[..., None], axis=-2)
